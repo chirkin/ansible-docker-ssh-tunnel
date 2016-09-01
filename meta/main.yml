@@ -1,0 +1,32 @@
+galaxy_info:
+  author: a4irkin
+  description: Ansible role for creating dockerized ssh tunnel communication
+
+
+  license: license (GPLv2, CC-BY, etc)
+
+  min_ansible_version: 1.2
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+    - name: Ubuntu
+      versions:
+        - trusty
+        - vivid
+        - wily
+        - xenial
+    - name: Debian
+      versions:
+        - all
+        - squeeze
+        - wheezy
+
+  galaxy_tags:
+    - ssh
+    - tunnel
+    - docker
+    - container
+
+dependencies: []

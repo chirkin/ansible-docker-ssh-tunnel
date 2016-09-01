@@ -1,0 +1,5 @@
+---
+base_path: '/srv/ssh-tunnel'    # stores auto-generated files like ssh keys
+ssh_tunnel_port: 2222           # communication port
+ssh_tunnel_bind_root: false     # need to be enabled if you want to bind
+                                  # system port (in 0—1023 range)

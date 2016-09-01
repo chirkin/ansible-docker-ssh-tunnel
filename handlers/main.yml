@@ -1,0 +1,4 @@
+---
+- name: plan to restart containers
+  set_fact:
+    _need_restart_containers: true

@@ -1,0 +1,50 @@
+---
+- hosts: all
+  gather_facts: false
+  become: false
+  tasks:
+    - name: install python
+      raw: python --version || tce-load -w -i python.tcz
+    - name: download pip
+      raw: pip -v || wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py
+
+- hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: install pip
+      raw: pip -v || python get-pip.py
+
+- hosts: all
+  # gather_facts: false
+  become: true
+  vars:
+    ansible_python_interpreter: '/usr/local/bin/python'
+  tasks:
+    - name: install docker-py
+      pip: name=docker-py
+
+- hosts: all
+  become: true
+  vars:
+    ansible_python_interpreter: '/usr/local/bin/python'
+  roles:
+    - { role: "ansible-docker-ssh-tunnel",
+        ssh_tunnel_master: "master",
+        ssh_tunnel_local_forward: [
+          { "bind_address": "127.0.0.1", "port": "8080",
+            "host": "ya.ru", "hostport": "80"
+          },
+        ]
+      }
+
+- hosts: client
+  become: false
+  vars:
+    ansible_python_interpreter: '/usr/local/bin/python'
+  tasks:
+    - name: testing tunnel
+      uri:
+        url: http://127.0.0.1:8080
+        timeout: 5
+      changed_when: false

@@ -1,0 +1,101 @@
+---
+- name: create base folder
+  file:
+    path="{{base_path}}"
+    state=directory
+
+- name: generate client certificate
+  shell:
+    creates="{{base_path}}/id_rsa"
+    ssh-keygen -f {{base_path}}/id_rsa -t rsa -P '' -C "ansible-docker-ssh-tunnel" &&
+  when: "{{inventory_hostname != ssh_tunnel_master}}"
+
+- name: set right permissions on client certificate
+  file:
+    dest: "{{base_path}}/id_rsa"
+    owner: "{{ '0' if ssh_tunnel_bind_root else '1000' }}"
+    group: "{{ '0' if ssh_tunnel_bind_root else '1000' }}"
+    mode: 0600
+    state: file
+  when: "{{inventory_hostname != ssh_tunnel_master}}"
+
+- name: get public key for client certificate
+  shell:
+    "cat {{base_path}}/id_rsa.pub"
+  changed_when: false
+  register: _id_rsa_pub
+  when: "{{inventory_hostname != ssh_tunnel_master}}"
+
+- name: push public key to master
+  authorized_key:
+    key: "{{_id_rsa_pub.stdout}}"
+    manage_dir: false
+    path: "{{base_path}}/authorized_keys"
+    user: root
+  delegate_to: "{{ssh_tunnel_master}}"
+  when: "{{inventory_hostname != ssh_tunnel_master}}"
+
+- name: set right permissions on authorized_keys file
+  file:
+    dest: "{{base_path}}/authorized_keys"
+    owner: 1000
+    group: 1000
+    state: file
+  run_once: true
+  delegate_to: "{{ssh_tunnel_master}}"
+
+- name: generate server ssh_host_key
+  shell:
+    creates="{{base_path}}/ssh_host_key"
+    ssh-keygen -f {{base_path}}/ssh_host_key -t ecdsa-sha2-nistp256 -P '' -C "ansible-docker-ssh-tunnel"
+  when: "{{ inventory_hostname == ssh_tunnel_master}}"
+
+- name: get master ssh_host_key.pub
+  shell: "cat {{base_path}}/ssh_host_key.pub"
+  changed_when: false
+  register: _master_ssh_host_key_pub
+  run_once: true
+  delegate_to: "{{ssh_tunnel_master}}"
+
+- name: create ssh_known_hosts file
+  copy:
+    content: "[{{hostvars[ssh_tunnel_master].ssh_tunnel_host}}]:{{ssh_tunnel_port}} {{_master_ssh_host_key_pub.stdout}}"
+    dest: "{{base_path}}/ssh_known_hosts"
+    mode: 0644
+  notify: plan to restart containers
+
+- meta: flush_handlers
+
+- name: (re)run master container
+  docker_container:
+    name: ssh-tunnel-master
+    image: "a4irkin/ssh-tunnel"
+    network_mode: host
+    volumes:
+      - "{{base_path}}/ssh_host_key:/etc/ssh/keys/ssh_host_key:ro"
+      - "{{base_path}}/authorized_keys:/home/tunnel/.ssh/authorized_keys:ro"
+    restart_policy: always
+    pull: "{{_need_restart_containers | default(false)}}"
+    restart: "{{_need_restart_containers | default(false)}}"
+    command: "/usr/sbin/sshd -D -f /etc/ssh/sshd_config -p {{ssh_tunnel_port}}"
+    state: "{{ 'started' if inventory_hostname == ssh_tunnel_master else 'absent' }}"
+
+- name: (re)run client container
+  docker_container:
+    name: ssh-tunnel-client
+    image: "a4irkin/ssh-tunnel"
+    network_mode: host
+    user: "{{'root' if ssh_tunnel_bind_root else 'tunnel'}}"
+    volumes:
+      - "{{base_path}}/ssh_known_hosts:/etc/ssh/ssh_known_hosts:ro"
+      - "{{base_path}}/id_rsa:{{ '/root' if ssh_tunnel_bind_root else '/home/tunnel' }}/.ssh/id_rsa:ro"
+    restart_policy: always
+    pull: "{{_need_restart_containers | default(false)}}"
+    restart: "{{_need_restart_containers | default(false)}}"
+    command: "
+      /usr/bin/ssh -N \
+      {% for item in ssh_tunnel_local_forward %}-L {{ item.bind_address+':' if item.bind_address is defined else ''}}{{item.port}}:{{item.host}}:{{item.hostport}} {% endfor %} \
+      tunnel@{{hostvars[ssh_tunnel_master].ssh_tunnel_host}} \
+      -p {{ssh_tunnel_port}}
+    "
+    state: "{{ 'started' if inventory_hostname != ssh_tunnel_master else 'absent' }}"
