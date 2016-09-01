@@ -1,6 +1,8 @@
 ansible-docker-ssh-tunnel
 =========
 
+[![Build Status](https://travis-ci.org/chirkin/ansible-docker-ssh-tunnel.svg?branch=master)](https://travis-ci.org/chirkin/ansible-docker-ssh-tunnel)
+
 This role installs and configures the dockerized ssh tunnels.
 
 You need to specify master host, other hosts, processed by playbook will be
