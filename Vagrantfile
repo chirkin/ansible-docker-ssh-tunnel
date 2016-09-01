@@ -31,10 +31,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         "master" => ["master"],
         "client" => ["client"]
       }
-      ansible.host_vars = {
-        "master" => { "ssh_tunnel_host": "10.0.0.11" },
-        "client" => { "ssh_tunnel_host": "10.0.0.12" }
-      }
     end
   end
 end

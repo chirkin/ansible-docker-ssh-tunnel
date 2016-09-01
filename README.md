@@ -19,11 +19,15 @@ Platform requirements are listed in the metadata file.
 Role Variables
 --------------
 
-    base_path: '/srv/ssh-tunnel'    # stores auto-generated files like ssh keys
-    ssh_tunnel_port: 2222           # communication port
-    ssh_tunnel_bind_root: false     # need to be enabled if you want to bind
-                                    # system port (in 0—1023 range)
-    ssh_tunnel_master: 'master'     # considered the master host
+    base_path: '/srv/ssh-tunnel'     # stores auto-generated files like ssh keys
+    ssh_tunnel_port: 2222            # communication port
+    ssh_tunnel_bind_root: false      # need to be enabled if you want to bind
+                                     # system port (in 0—1023 range)
+    ssh_tunnel_master: 'master'      # considered the master inventory hostname
+
+    # ip address for client hosts connections, by default is
+    # ansible_default_ipv4.address of ssh_tunnel_master host
+    ssh_tunnel_master_ip: '10.0.0.1'
 
     # an array of local (for client) forwarding settings
     # this will be interpolated in ssh command argument as
@@ -47,7 +51,8 @@ Example Playbook
     - hosts: all
       roles:
         - { role: "ansible-docker-ssh-tunnel",
-            ssh_tunnel_master: 'master',
+            ssh_tunnel_master: "master",
+            ssh_tunnel_master_ip: '{{hostvars['master'].ansible_default_ipv4.address}}'
             ssh_tunnel_local_forward: [
               { "bind_address": "127.0.0.1", "port": "8080", "host": "example.com", "hostport": "80" },
             ]

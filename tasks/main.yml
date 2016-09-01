@@ -7,7 +7,7 @@
 - name: generate client certificate
   shell:
     creates="{{base_path}}/id_rsa"
-    ssh-keygen -f {{base_path}}/id_rsa -t rsa -P '' -C "ansible-docker-ssh-tunnel" &&
+    ssh-keygen -f {{base_path}}/id_rsa -t rsa -P '' -C "ansible-docker-ssh-tunnel"
   when: "{{inventory_hostname != ssh_tunnel_master}}"
 
 - name: set right permissions on client certificate
@@ -59,7 +59,7 @@
 
 - name: create ssh_known_hosts file
   copy:
-    content: "[{{hostvars[ssh_tunnel_master].ssh_tunnel_host}}]:{{ssh_tunnel_port}} {{_master_ssh_host_key_pub.stdout}}"
+    content: "[{{ssh_tunnel_master_ip}}]:{{ssh_tunnel_port}} {{_master_ssh_host_key_pub.stdout}}"
     dest: "{{base_path}}/ssh_known_hosts"
     mode: 0644
   notify: plan to restart containers
@@ -95,7 +95,7 @@
     command: "
       /usr/bin/ssh -N \
       {% for item in ssh_tunnel_local_forward %}-L {{ item.bind_address+':' if item.bind_address is defined else ''}}{{item.port}}:{{item.host}}:{{item.hostport}} {% endfor %} \
-      tunnel@{{hostvars[ssh_tunnel_master].ssh_tunnel_host}} \
+      tunnel@{{ssh_tunnel_master_ip}} \
       -p {{ssh_tunnel_port}}
     "
     state: "{{ 'started' if inventory_hostname != ssh_tunnel_master else 'absent' }}"

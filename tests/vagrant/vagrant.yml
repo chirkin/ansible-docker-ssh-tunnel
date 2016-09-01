@@ -31,6 +31,7 @@
   roles:
     - { role: "ansible-docker-ssh-tunnel",
         ssh_tunnel_master: "master",
+        ssh_tunnel_master_ip: "10.0.0.11",
         ssh_tunnel_local_forward: [
           { "bind_address": "127.0.0.1", "port": "8080",
             "host": "ya.ru", "hostport": "80"
