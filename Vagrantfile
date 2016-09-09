@@ -6,7 +6,7 @@ ENV['ANSIBLE_ROLES_PATH'] = "../"
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "AlbanMontaigu/boot2docker"
+  config.vm.box = "chirkin/boot2docker-py"
   config.vm.hostname = "ansible-docker-ssh-tunnel"
 
   config.vm.provider "virtualbox" do |v|

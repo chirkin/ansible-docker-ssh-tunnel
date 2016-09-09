@@ -1,30 +1,5 @@
 ---
 - hosts: all
-  gather_facts: false
-  become: false
-  tasks:
-    - name: install python
-      raw: python --version || tce-load -w -i python.tcz
-    - name: download pip
-      raw: pip -v || wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py
-
-- hosts: all
-  gather_facts: false
-  become: true
-  tasks:
-    - name: install pip
-      raw: pip -v || python get-pip.py
-
-- hosts: all
-  # gather_facts: false
-  become: true
-  vars:
-    ansible_python_interpreter: '/usr/local/bin/python'
-  tasks:
-    - name: install docker-py
-      pip: name=docker-py
-
-- hosts: all
   become: true
   vars:
     ansible_python_interpreter: '/usr/local/bin/python'

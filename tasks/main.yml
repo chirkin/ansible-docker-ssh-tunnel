@@ -43,6 +43,7 @@
     state: file
   run_once: true
   delegate_to: "{{ssh_tunnel_master}}"
+  when: "{{inventory_hostname != ssh_tunnel_master}}"
 
 - name: generate server ssh_host_key
   shell:
