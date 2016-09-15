@@ -74,7 +74,7 @@
     network_mode: host
     volumes:
       - "{{base_path}}/ssh_host_key:/etc/ssh/keys/ssh_host_key:ro"
-      - "{{base_path}}/authorized_keys:/home/tunnel/.ssh/authorized_keys:ro"
+      - "{{base_path}}:/home/tunnel/.ssh:ro"
     restart_policy: always
     pull: "{{_need_restart_containers | default(false)}}"
     restart: "{{_need_restart_containers | default(false)}}"
@@ -89,7 +89,7 @@
     user: "{{'root' if ssh_tunnel_bind_root else 'tunnel'}}"
     volumes:
       - "{{base_path}}/ssh_known_hosts:/etc/ssh/ssh_known_hosts:ro"
-      - "{{base_path}}/id_rsa:{{ '/root' if ssh_tunnel_bind_root else '/home/tunnel' }}/.ssh/id_rsa:ro"
+      - "{{base_path}}:{{ '/root' if ssh_tunnel_bind_root else '/home/tunnel' }}/.ssh:ro"
     restart_policy: always
     pull: "{{_need_restart_containers | default(false)}}"
     restart: "{{_need_restart_containers | default(false)}}"
