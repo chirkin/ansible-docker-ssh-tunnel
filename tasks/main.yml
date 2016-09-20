@@ -35,6 +35,12 @@
   delegate_to: "{{ssh_tunnel_master}}"
   when: "{{inventory_hostname != ssh_tunnel_master}}"
 
+- name: create authorized_keys file if not exists
+  command: touch {{base_path}}/authorized_keys
+  args:
+    creates: "{{base_path}}/authorized_keys"
+  when: "{{inventory_hostname == ssh_tunnel_master}}"
+
 - name: set right permissions on authorized_keys file
   file:
     dest: "{{base_path}}/authorized_keys"
