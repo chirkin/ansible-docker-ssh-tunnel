@@ -8,7 +8,7 @@
   shell:
     creates="{{base_path}}/id_rsa"
     ssh-keygen -f {{base_path}}/id_rsa -t rsa -P '' -C "ansible-docker-ssh-tunnel"
-  when: "{{inventory_hostname != ssh_tunnel_master}}"
+  when: inventory_hostname != ssh_tunnel_master
 
 - name: set right permissions on client certificate
   file:
@@ -17,14 +17,14 @@
     group: "{{ '0' if ssh_tunnel_bind_root else '1000' }}"
     mode: 0600
     state: file
-  when: "{{inventory_hostname != ssh_tunnel_master}}"
+  when: inventory_hostname != ssh_tunnel_master
 
 - name: get public key for client certificate
   shell:
     "cat {{base_path}}/id_rsa.pub"
   changed_when: false
   register: _id_rsa_pub
-  when: "{{inventory_hostname != ssh_tunnel_master}}"
+  when: inventory_hostname != ssh_tunnel_master
 
 - name: push public key to master
   authorized_key:
@@ -33,13 +33,13 @@
     path: "{{base_path}}/authorized_keys"
     user: root
   delegate_to: "{{ssh_tunnel_master}}"
-  when: "{{inventory_hostname != ssh_tunnel_master}}"
+  when: inventory_hostname != ssh_tunnel_master
 
 - name: create authorized_keys file if not exists
   command: touch {{base_path}}/authorized_keys
   args:
     creates: "{{base_path}}/authorized_keys"
-  when: "{{inventory_hostname == ssh_tunnel_master}}"
+  when: inventory_hostname == ssh_tunnel_master
 
 - name: set right permissions on authorized_keys file
   file:
@@ -49,13 +49,13 @@
     state: file
   run_once: true
   delegate_to: "{{ssh_tunnel_master}}"
-  when: "{{inventory_hostname != ssh_tunnel_master}}"
+  when: inventory_hostname != ssh_tunnel_master
 
 - name: generate server ssh_host_key
   shell:
     creates="{{base_path}}/ssh_host_key"
     ssh-keygen -f {{base_path}}/ssh_host_key -t ecdsa-sha2-nistp256 -P '' -C "ansible-docker-ssh-tunnel"
-  when: "{{ inventory_hostname == ssh_tunnel_master}}"
+  when: inventory_hostname == ssh_tunnel_master
 
 - name: get master ssh_host_key.pub
   shell: "cat {{base_path}}/ssh_host_key.pub"
